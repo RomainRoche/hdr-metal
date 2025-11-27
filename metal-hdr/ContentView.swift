@@ -57,9 +57,8 @@ struct ContentView: View {
                             .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.white.opacity(0.6), lineWidth: 1))
                     }
                 }
-                .padding(.vertical, 12)
+                .padding(.horizontal, 12)
             }
-            .padding(.horizontal, 12)
         }
     }
 
