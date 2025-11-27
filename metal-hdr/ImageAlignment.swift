@@ -40,8 +40,9 @@ class ImageAlignment {
         }
 
         let commandBuffer = commandQueue.makeCommandBuffer()!
-        // Use standard sRGB colorspace for Metal texture rendering
-        context.render(grayscaleImage, to: outputTexture, commandBuffer: commandBuffer, bounds: grayscaleImage.extent, colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!)
+        // Use linear color space to match HDR linear workflow
+        let linear = CGColorSpace(name: CGColorSpace.linearSRGB)!
+        context.render(grayscaleImage, to: outputTexture, commandBuffer: commandBuffer, bounds: grayscaleImage.extent, colorSpace: linear)
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
 
@@ -71,8 +72,9 @@ class ImageAlignment {
         }
 
         let commandBuffer = commandQueue.makeCommandBuffer()!
-        // Use standard sRGB colorspace for Metal texture rendering
-        context.render(translatedImage, to: outputTexture, commandBuffer: commandBuffer, bounds: translatedImage.extent, colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!)
+        // Use linear color space to match HDR linear workflow
+        let linear = CGColorSpace(name: CGColorSpace.linearSRGB)!
+        context.render(translatedImage, to: outputTexture, commandBuffer: commandBuffer, bounds: translatedImage.extent, colorSpace: linear)
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
 
@@ -92,3 +94,4 @@ class ImageAlignment {
         return device.makeTexture(descriptor: descriptor)
     }
 }
+

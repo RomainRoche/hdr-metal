@@ -71,15 +71,13 @@ kernel void computeExposureWeights(
     
     float4 pixel = image.read(gid);
     
-    // 1. Exposure weight (Gaussian around 0.5)
-    float lum = luminance(pixel.rgb);
-    float exposureWeight = exp(-pow(lum - 0.5, 2.0) / (2.0 * sigma * sigma));
+    // Use linear middle gray (~0.18) as exposure center in linear space
+    const float exposureCenter = 0.18;
+    float exposureWeight = exp(-pow(luminance(pixel.rgb) - exposureCenter, 2.0) / (2.0 * sigma * sigma));
     
-    // 2. Contrast weight
-    float contrastWeight = contrast(image, gid);
-    
-    // 3. Saturation weight
-    float saturationWeight = saturation(pixel.rgb);
+    // Clamp contrast and saturation weights to avoid runaway weights on noise
+    float contrastWeight = clamp(contrast(image, gid), 0.0, 1.0);
+    float saturationWeight = clamp(saturation(pixel.rgb), 0.0, 1.0);
     
     // Combine weights
     float finalWeight = (exposureWeight + 0.2) * (contrastWeight + 0.01) * (saturationWeight + 0.01);

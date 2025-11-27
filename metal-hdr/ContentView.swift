@@ -63,7 +63,7 @@ struct ContentView: View {
                 let result = hdrBuilder.buildHDR(
                     from: ciImages,
                     alignment: true,
-                    toneMapping: .reinhard(exposure: 0.7)
+                    toneMapping: .reinhard(exposure: 0.4)
                 )
 
                 DispatchQueue.main.async {
