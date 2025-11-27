@@ -85,15 +85,12 @@ public final class MultipleBracketCapturer: NSObject, Capturer, AVCapturePhotoCa
     public var output: AVCaptureOutput { stillImageOutput }
     
     private let exposures: [AVCaptureAutoExposureBracketedStillImageSettings] = [
-        AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias: -4.0),
-        AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias: -3.0),
         AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias: -2.0),
         AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias: -1.0),
-        AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias: 0.0),
-        AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias: 1.0),
-        AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias: 2.0),
-        AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias: 3.0),
-        AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias: 4.0),
+        AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias:  0.0),
+        AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias:  0.0),
+        AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias:  1.0),
+        AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias:  2.0),
     ]
     
     @MainActor
@@ -140,7 +137,9 @@ public final class MultipleBracketCapturer: NSObject, Capturer, AVCapturePhotoCa
         photos.append(image)
         
         if photos.count == exposures.count {
-            onCapture.send((photos, UIDevice.current.imageOrientation))
+            var toSend = photos
+            toSend.remove(at: 2)
+            onCapture.send((toSend, UIDevice.current.imageOrientation))
             print("Multiple bracket capture: took \(String(format: "%.6f", Date().timeIntervalSinceReferenceDate - captureTime))s")
             photos = []
         }

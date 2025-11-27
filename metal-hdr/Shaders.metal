@@ -95,20 +95,12 @@ kernel void weightedMerge(
     texture2d<float, access::read> image2 [[texture(2)]],
     texture2d<float, access::read> image3 [[texture(3)]],
     texture2d<float, access::read> image4 [[texture(4)]],
-    texture2d<float, access::read> image5 [[texture(5)]],
-    texture2d<float, access::read> image6 [[texture(6)]],
-    texture2d<float, access::read> image7 [[texture(7)]],
-    texture2d<float, access::read> image8 [[texture(8)]],
-    texture2d<float, access::read> weight0 [[texture(9)]],
-    texture2d<float, access::read> weight1 [[texture(10)]],
-    texture2d<float, access::read> weight2 [[texture(11)]],
-    texture2d<float, access::read> weight3 [[texture(12)]],
-    texture2d<float, access::read> weight4 [[texture(13)]],
-    texture2d<float, access::read> weight5 [[texture(14)]],
-    texture2d<float, access::read> weight6 [[texture(15)]],
-    texture2d<float, access::read> weight7 [[texture(16)]],
-    texture2d<float, access::read> weight8 [[texture(17)]],
-    texture2d<float, access::write> output [[texture(18)]],
+    texture2d<float, access::read> weight0 [[texture(5)]],
+    texture2d<float, access::read> weight1 [[texture(6)]],
+    texture2d<float, access::read> weight2 [[texture(7)]],
+    texture2d<float, access::read> weight3 [[texture(8)]],
+    texture2d<float, access::read> weight4 [[texture(9)]],
+    texture2d<float, access::write> output [[texture(10)]],
     constant int &numImages [[buffer(0)]],
     uint2 gid [[thread_position_in_grid]])
 {
@@ -147,30 +139,6 @@ kernel void weightedMerge(
     if (numImages >= 5) {
         float w = weight4.read(gid).r;
         sumWeighted += image4.read(gid) * w;
-        sumWeights += w;
-    }
-
-    if (numImages >= 6) {
-        float w = weight5.read(gid).r;
-        sumWeighted += image5.read(gid) * w;
-        sumWeights += w;
-    }
-
-    if (numImages >= 7) {
-        float w = weight6.read(gid).r;
-        sumWeighted += image6.read(gid) * w;
-        sumWeights += w;
-    }
-
-    if (numImages >= 8) {
-        float w = weight7.read(gid).r;
-        sumWeighted += image7.read(gid) * w;
-        sumWeights += w;
-    }
-
-    if (numImages >= 9) {
-        float w = weight8.read(gid).r;
-        sumWeighted += image8.read(gid) * w;
         sumWeights += w;
     }
 

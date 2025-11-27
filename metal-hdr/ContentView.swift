@@ -22,7 +22,10 @@ struct ContentView: View {
     
     @State
     private var images: [UIImage] = []
-    
+
+    @State
+    private var ciImages: [CIImage] = []
+
     @State
     private var hdrResultOrientation: UIImage.Orientation = .up
     
@@ -56,12 +59,13 @@ struct ContentView: View {
         Button {
             guard let hdrBuilder else { return }
             DispatchQueue.global(qos: .userInitiated).async {
+                // Use CIImages directly to avoid colorspace conversion issues
                 let result = hdrBuilder.buildHDR(
-                    from: images,
+                    from: ciImages,
                     alignment: true,
                     toneMapping: .reinhard(exposure: 1.2)
                 )
-                
+
                 DispatchQueue.main.async {
                     if let hdrImage = result {
                         self.hdrImage = hdrImage.reoriented(hdrResultOrientation)
@@ -76,7 +80,7 @@ struct ContentView: View {
                 .frame(width: 140, height: 140)
                 .background(Color.accentColor)
                 .clipShape(RoundedRectangle(cornerRadius: 4))
-            
+
         }
     }
     
@@ -115,6 +119,7 @@ struct ContentView: View {
                 Spacer()
                 Button {
                     images = []
+                    ciImages = []
                     capturer.capture()
                 } label: {
                     shutterButton
@@ -131,6 +136,7 @@ struct ContentView: View {
             capturer.onCapture
                 .receive(on: DispatchQueue.main)
                 .sink {
+                    ciImages = $0.images
                     images = $0.images.uiImages(with: $0.orientation)
                     hdrResultOrientation = $0.orientation
                 }

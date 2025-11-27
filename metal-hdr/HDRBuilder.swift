@@ -95,15 +95,43 @@ class HDRBuilder {
         alignment: Bool = true,
         toneMapping: ToneMappingMode = .reinhard(exposure: 1.0)
     ) -> UIImage? {
-        
+
         guard !images.isEmpty else { return nil }
         let textures = images.compactMap({ createTexture(from: $0) })
-        
+
         // Convert UIImages to Metal textures
         guard textures.count == images.count else {
             print("Failed to convert images to textures")
             return nil
         }
+
+        return buildHDRFromTextures(textures, alignment: alignment, toneMapping: toneMapping)
+    }
+
+    func buildHDR(
+        from ciImages: [CIImage],
+        alignment: Bool = true,
+        toneMapping: ToneMappingMode = .reinhard(exposure: 1.0)
+    ) -> UIImage? {
+
+        guard !ciImages.isEmpty else { return nil }
+        let textures = ciImages.compactMap({ createTexture(from: $0) })
+
+        // Convert CIImages to Metal textures
+        guard textures.count == ciImages.count else {
+            print("Failed to convert images to textures")
+            return nil
+        }
+
+        return buildHDRFromTextures(textures, alignment: alignment, toneMapping: toneMapping)
+    }
+
+    private func buildHDRFromTextures(
+        _ textures: [MTLTexture],
+        alignment: Bool,
+        toneMapping: ToneMappingMode
+    ) -> UIImage? {
+        guard !textures.isEmpty else { return nil }
         
         // Align images if requested
         let alignedTextures: [MTLTexture]
@@ -307,15 +335,49 @@ class HDRBuilder {
     
     private func createTexture(from image: UIImage) -> MTLTexture? {
         guard let cgImage = image.cgImage else { return nil }
-        
+
         let textureLoader = MTKTextureLoader(device: device)
         let options: [MTKTextureLoader.Option: Any] = [
             .textureUsage: MTLTextureUsage.shaderRead.rawValue | MTLTextureUsage.shaderWrite.rawValue,
             .textureStorageMode: MTLStorageMode.private.rawValue,
-            .SRGB: false // Important: work in linear space
+            .SRGB: true // Convert sRGB input to linear space for HDR processing
         ]
-        
+
         return try? textureLoader.newTexture(cgImage: cgImage, options: options)
+    }
+
+    private func createTexture(from ciImage: CIImage) -> MTLTexture? {
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(
+            pixelFormat: .rgba16Float, // Use HDR-capable format
+            width: Int(ciImage.extent.width),
+            height: Int(ciImage.extent.height),
+            mipmapped: false
+        )
+        descriptor.usage = [.shaderRead, .shaderWrite]
+        descriptor.storageMode = .private
+
+        guard let texture = device.makeTexture(descriptor: descriptor) else {
+            return nil
+        }
+
+        // Render CIImage directly to Metal texture using CIContext
+        // This preserves the original colorspace and avoids unnecessary conversions
+        guard let commandBuffer = commandQueue.makeCommandBuffer() else {
+            return nil
+        }
+
+        ciContext.render(
+            ciImage,
+            to: texture,
+            commandBuffer: commandBuffer,
+            bounds: ciImage.extent,
+            colorSpace: CGColorSpace(name: CGColorSpace.extendedLinearSRGB)!
+        )
+
+        commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
+
+        return texture
     }
     
     private func makeTexture(like texture: MTLTexture, pixelFormat: MTLPixelFormat? = nil) -> MTLTexture? {
