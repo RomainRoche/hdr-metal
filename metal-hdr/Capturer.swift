@@ -32,7 +32,11 @@ public final class BracketCapturer: NSObject, Capturer, AVCapturePhotoCaptureDel
     private var photos: [UIImage] = []
     
     @MainActor
+    private var captureTime: TimeInterval = 0
+    
+    @MainActor
     public func capture() {
+        captureTime = Date().timeIntervalSinceReferenceDate
         stillImageOutput.maxPhotoQualityPrioritization = .quality
         
         let photoSettings = AVCapturePhotoBracketSettings(
@@ -64,6 +68,7 @@ public final class BracketCapturer: NSObject, Capturer, AVCapturePhotoCaptureDel
         
         if photos.count == exposures.count {
             onCapture.send(photos)
+            print("Bracket capture: took \(String(format: "%.6f", Date().timeIntervalSinceReferenceDate - captureTime))s")
             photos = []
         }
     }
