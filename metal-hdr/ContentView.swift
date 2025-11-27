@@ -10,7 +10,7 @@ import SwiftUI
 struct ContentView: View {
     
     @State
-    private var capturer: Capturer = BracketCapturer()
+    private var capturer: Capturer = MultipleBracketCapturer()
     
     var body: some View {
         ZStack {
