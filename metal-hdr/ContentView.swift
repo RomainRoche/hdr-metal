@@ -14,10 +14,19 @@ struct ContentView: View {
     private var capturer: Capturer = MultipleBracketCapturer()
     
     @State
+    private var hdrBuilder = HDRBuilder()
+    
+    @State
     private var cancels = Set<AnyCancellable>()
     
     @State
     private var images: [UIImage] = []
+    
+    @State
+    private var hdrImage: UIImage?
+    
+    @State
+    private var showHDR: Bool = false
 
     @ViewBuilder
     var shutterButton: some View {
@@ -39,12 +48,43 @@ struct ContentView: View {
     }
     
     @ViewBuilder
+    var toHDR: some View {
+        Button {
+            guard let hdrBuilder else { return }
+            DispatchQueue.global(qos: .userInitiated).async {
+                let result = hdrBuilder.buildHDR(
+                    from: images,
+                    alignment: true,
+                    toneMapping: .reinhard(exposure: 1.2)
+                )
+                
+                DispatchQueue.main.async {
+                    if let hdrImage = result {
+                        self.hdrImage = hdrImage
+                        showHDR = true
+                    }
+                }
+            }
+        } label: {
+            Text("HDR")
+                .foregroundStyle(Color.white)
+                .padding()
+                .frame(width: 140, height: 140)
+                .background(Color.accentColor)
+                .clipShape(RoundedRectangle(cornerRadius: 4))
+            
+        }
+    }
+    
+    @ViewBuilder
     var capturedImages: some View {
         if images.isEmpty {
             EmptyView()
         } else {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(alignment: .center, spacing: 8) {
+                    toHDR
+                    
                     ForEach(Array(images.enumerated()), id: \.offset) { offset, image in
                         Image(uiImage: image)
                             .resizable()
@@ -90,6 +130,16 @@ struct ContentView: View {
                     images = $0.images.uiImages(with: $0.orientation)
                 }
                 .store(in: &cancels)
+        }
+        .sheet(isPresented: $showHDR) {
+            if let hdrImage {
+                Image(uiImage: hdrImage)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                EmptyView()
+            }
         }
     }
     
