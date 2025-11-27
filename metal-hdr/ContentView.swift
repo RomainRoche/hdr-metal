@@ -87,7 +87,7 @@ struct ContentView: View {
             capturer.onCapture
                 .receive(on: DispatchQueue.main)
                 .sink {
-                    images = $0
+                    images = $0.images.uiImages(with: $0.orientation)
                 }
                 .store(in: &cancels)
         }

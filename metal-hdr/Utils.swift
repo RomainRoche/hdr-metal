@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import UIKit
+import CoreImage
 
 func measureTime(_ label: String, _ closure: () -> Void) {
     let start = CFAbsoluteTimeGetCurrent()
@@ -27,4 +29,37 @@ extension Array {
     }
 }
 
+extension Array where Element == CIImage {
+    
+    func uiImages(with orientation: UIImage.Orientation) -> [UIImage] {
+        let context = CIContext()
+        return self.compactMap {
+            guard let cgImage = context.createCGImage($0, from: $0.extent)
+            else { return nil }
+            return UIImage(cgImage: cgImage, scale: 1, orientation: UIDevice.current.imageOrientation)
+        }
+    }
+    
+}
 
+extension UIDevice {
+    
+    var imageOrientation: UIImage.Orientation {
+        switch orientation {
+        case .portrait:
+            return .right
+        case .portraitUpsideDown:
+            return .left
+        case .landscapeLeft:
+            return .up
+        case .landscapeRight:
+            return .down
+        case .faceUp, .faceDown, .unknown:
+            // Default to portrait orientation
+            return .right
+        @unknown default:
+            return .right
+        }
+    }
+    
+}

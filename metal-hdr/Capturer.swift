@@ -8,16 +8,19 @@
 import AVKit
 import Foundation
 import Combine
+import CoreImage
+
+public typealias CaptureOutput = (images: [CIImage], orientation: UIImage.Orientation)
 
 public protocol Capturer {
-    var onCapture: PassthroughSubject<[UIImage], Never> { get }
+    var onCapture: PassthroughSubject<CaptureOutput, Never> { get }
     var output: AVCaptureOutput { get }
     @MainActor func capture()
 }
 
 public final class BracketCapturer: NSObject, Capturer, AVCapturePhotoCaptureDelegate {
     
-    public var onCapture: PassthroughSubject<[UIImage], Never> = .init()
+    public var onCapture: PassthroughSubject<CaptureOutput, Never> = .init()
     
     private let stillImageOutput = AVCapturePhotoOutput()
     public var output: AVCaptureOutput { stillImageOutput }
@@ -29,7 +32,7 @@ public final class BracketCapturer: NSObject, Capturer, AVCapturePhotoCaptureDel
     ]
     
     @MainActor
-    private var photos: [UIImage] = []
+    private var photos: [CIImage] = []
     
     @MainActor
     private var captureTime: TimeInterval = 0
@@ -63,11 +66,11 @@ public final class BracketCapturer: NSObject, Capturer, AVCapturePhotoCaptureDel
         didFinishProcessingPhoto photo: AVCapturePhoto,
         error: (any Error)?
     ) {
-        guard let image = photo.uiImage else { return }
+        guard let image = photo.ciImage else { return }
         photos.append(image)
         
         if photos.count == exposures.count {
-            onCapture.send(photos)
+            onCapture.send((photos, UIDevice.current.imageOrientation))
             print("Bracket capture: took \(String(format: "%.6f", Date().timeIntervalSinceReferenceDate - captureTime))s")
             photos = []
         }
@@ -76,7 +79,7 @@ public final class BracketCapturer: NSObject, Capturer, AVCapturePhotoCaptureDel
 }
 
 public final class MultipleBracketCapturer: NSObject, Capturer, AVCapturePhotoCaptureDelegate {
-    public var onCapture: PassthroughSubject<[UIImage], Never> = .init()
+    public var onCapture: PassthroughSubject<CaptureOutput, Never> = .init()
     
     private let stillImageOutput = AVCapturePhotoOutput()
     public var output: AVCaptureOutput { stillImageOutput }
@@ -94,7 +97,7 @@ public final class MultipleBracketCapturer: NSObject, Capturer, AVCapturePhotoCa
     ]
     
     @MainActor
-    private var photos: [UIImage] = []
+    private var photos: [CIImage] = []
     
     @MainActor
     private var captureTime: TimeInterval = 0
@@ -133,11 +136,11 @@ public final class MultipleBracketCapturer: NSObject, Capturer, AVCapturePhotoCa
         didFinishProcessingPhoto photo: AVCapturePhoto,
         error: (any Error)?
     ) {
-        guard let image = photo.uiImage else { return }
+        guard let image = photo.ciImage else { return }
         photos.append(image)
         
         if photos.count == exposures.count {
-            onCapture.send(photos)
+            onCapture.send((photos, UIDevice.current.imageOrientation))
             print("Multiple bracket capture: took \(String(format: "%.6f", Date().timeIntervalSinceReferenceDate - captureTime))s")
             photos = []
         }
@@ -159,26 +162,9 @@ fileprivate extension AVCapturePhoto {
 #endif
     }
     
-}
-
-fileprivate extension UIDevice {
-    
-    var imageOrientation: UIImage.Orientation {
-        switch orientation {
-        case .portrait:
-            return .right
-        case .portraitUpsideDown:
-            return .left
-        case .landscapeLeft:
-            return .up
-        case .landscapeRight:
-            return .down
-        case .faceUp, .faceDown, .unknown:
-            // Default to portrait orientation
-            return .right
-        @unknown default:
-            return .right
-        }
+    var ciImage: CIImage? {
+        guard let imageData = fileDataRepresentation() else { return nil }
+        return CIImage(data: imageData)
     }
     
 }
