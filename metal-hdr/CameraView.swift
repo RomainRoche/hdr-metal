@@ -6,11 +6,19 @@
 //
 
 import SwiftUI
+import AVKit
 
 struct CameraView: UIViewRepresentable {
     
+    private let cameraOutput: AVCaptureOutput
+    
+    init(with cameraOutput: AVCaptureOutput) {
+        self.cameraOutput = cameraOutput
+    }
+    
     func makeUIView(context: Context) -> CameraPreviewView {
         let cameraView = CameraPreviewView()
+        cameraView.bound(to: cameraOutput)
         return cameraView
     }
     
@@ -22,4 +30,5 @@ struct CameraView: UIViewRepresentable {
         // Clean up when the view is removed
         uiView.stopSession()
     }
+    
 }

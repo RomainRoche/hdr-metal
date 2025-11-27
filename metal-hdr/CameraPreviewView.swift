@@ -90,4 +90,13 @@ class CameraPreviewView: UIView {
             captureSession.stopRunning()
         }
     }
+    
+    func bound(to output: AVCaptureOutput) {
+        guard let captureSession else { return }
+        if captureSession.canAddOutput(output) {
+            output.connection(with: .video)?.videoRotationAngle = 90
+            captureSession.addOutput(output)
+        }
+    }
+    
 }

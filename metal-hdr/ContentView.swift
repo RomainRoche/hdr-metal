@@ -8,23 +8,32 @@
 import SwiftUI
 
 struct ContentView: View {
+    
+    @State
+    private var capturer: Capturer = BracketCapturer()
+    
     var body: some View {
         ZStack {
-            CameraView()
+            CameraView(with: capturer.output)
                 .ignoresSafeArea()
             
             VStack {
                 Spacer()
-                Text("Camera View")
-                    .font(.title)
-                    .foregroundStyle(.white)
-                    .padding()
-                    .background(.ultraThinMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .padding()
+                Button {
+                    capturer.capture()
+                } label: {
+                    Text("Camera View")
+                        .font(.title)
+                        .foregroundStyle(.white)
+                        .padding()
+                        .background(.ultraThinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .padding()
+                }
             }
         }
     }
+    
 }
 
 #Preview {
