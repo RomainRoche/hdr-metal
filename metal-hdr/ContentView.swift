@@ -63,7 +63,7 @@ struct ContentView: View {
                 let result = hdrBuilder.buildHDR(
                     from: ciImages,
                     alignment: true,
-                    toneMapping: .reinhard(exposure: 1.2)
+                    toneMapping: .reinhard(exposure: 0.7)
                 )
 
                 DispatchQueue.main.async {
@@ -103,6 +103,10 @@ struct ContentView: View {
                             )
                             .clipShape(RoundedRectangle(cornerRadius: 4))
                             .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.white.opacity(0.6), lineWidth: 1))
+                            .onLongPressGesture {
+                                UIPasteboard.general.image = image
+                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            }
                     }
                 }
                 .padding(.horizontal, 12)
@@ -148,6 +152,10 @@ struct ContentView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .onLongPressGesture {
+                        UIPasteboard.general.image = hdrImage
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    }
             } else {
                 EmptyView()
             }
