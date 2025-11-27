@@ -33,17 +33,18 @@ class ImageAlignment {
     private func convertToGrayscale(_ texture: MTLTexture, device: MTLDevice, commandQueue: MTLCommandQueue) -> MTLTexture? {
         let ciImage = CIImage(mtlTexture: texture, options: nil)
         let context = CIContext(mtlDevice: device)
-        
+
         guard let grayscaleImage = ciImage?.applyingFilter("CIPhotoEffectMono"),
               let outputTexture = makeTexture(like: texture, device: device) else {
             return nil
         }
-        
+
         let commandBuffer = commandQueue.makeCommandBuffer()!
-        context.render(grayscaleImage, to: outputTexture, commandBuffer: commandBuffer, bounds: grayscaleImage.extent, colorSpace: CGColorSpaceCreateDeviceGray())
+        // Use standard sRGB colorspace for Metal texture rendering
+        context.render(grayscaleImage, to: outputTexture, commandBuffer: commandBuffer, bounds: grayscaleImage.extent, colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!)
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
-        
+
         return outputTexture
     }
     
@@ -63,17 +64,18 @@ class ImageAlignment {
     private func translateTexture(_ texture: MTLTexture, offset: CGPoint, device: MTLDevice, commandQueue: MTLCommandQueue) -> MTLTexture? {
         let ciImage = CIImage(mtlTexture: texture, options: nil)
         let context = CIContext(mtlDevice: device)
-        
+
         guard let translatedImage = ciImage?.transformed(by: CGAffineTransform(translationX: offset.x, y: offset.y)),
               let outputTexture = makeTexture(like: texture, device: device) else {
             return nil
         }
-        
+
         let commandBuffer = commandQueue.makeCommandBuffer()!
-        context.render(translatedImage, to: outputTexture, commandBuffer: commandBuffer, bounds: translatedImage.extent, colorSpace: CGColorSpaceCreateDeviceRGB())
+        // Use standard sRGB colorspace for Metal texture rendering
+        context.render(translatedImage, to: outputTexture, commandBuffer: commandBuffer, bounds: translatedImage.extent, colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!)
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
-        
+
         return outputTexture
     }
     
