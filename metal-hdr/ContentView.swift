@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import UIKit
 
 struct ContentView: View {
     
@@ -21,6 +22,9 @@ struct ContentView: View {
     
     @State
     private var images: [UIImage] = []
+    
+    @State
+    private var hdrResultOrientation: UIImage.Orientation = .up
     
     @State
     private var hdrImage: UIImage?
@@ -60,7 +64,7 @@ struct ContentView: View {
                 
                 DispatchQueue.main.async {
                     if let hdrImage = result {
-                        self.hdrImage = hdrImage
+                        self.hdrImage = hdrImage.reoriented(hdrResultOrientation)
                         showHDR = true
                     }
                 }
@@ -128,6 +132,7 @@ struct ContentView: View {
                 .receive(on: DispatchQueue.main)
                 .sink {
                     images = $0.images.uiImages(with: $0.orientation)
+                    hdrResultOrientation = $0.orientation
                 }
                 .store(in: &cancels)
         }

@@ -42,6 +42,15 @@ extension Array where Element == CIImage {
     
 }
 
+extension UIImage {
+    
+    func reoriented(_ orientation: UIImage.Orientation? = nil) -> UIImage {
+        guard let cgImage = cgImage else { return self }
+        return UIImage(cgImage: cgImage, scale: 1, orientation: orientation ?? UIDevice.current.imageOrientation)
+    }
+    
+}
+
 extension UIDevice {
     
     var imageOrientation: UIImage.Orientation {
