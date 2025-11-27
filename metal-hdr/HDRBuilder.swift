@@ -348,15 +348,21 @@ class HDRBuilder {
     }
     
     private func createImage(from texture: MTLTexture) -> UIImage? {
-        let ciImage = CIImage(mtlTexture: texture, options: [
-            .colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!
-        ])
-        
-        guard let ciImg = ciImage,
-              let cgImage = ciContext.createCGImage(ciImg, from: ciImg.extent) else {
+        // Don't specify colorspace when creating CIImage - let it use the texture's format
+        guard let ciImage = CIImage(mtlTexture: texture, options: nil) else {
             return nil
         }
-        
+
+        // Explicitly use sRGB for the final render since tone mapping already converted to gamma-corrected space
+        guard let cgImage = ciContext.createCGImage(
+            ciImage,
+            from: ciImage.extent,
+            format: .RGBA8,
+            colorSpace: CGColorSpace(name: CGColorSpace.sRGB)
+        ) else {
+            return nil
+        }
+
         return UIImage(cgImage: cgImage)
     }
 }
