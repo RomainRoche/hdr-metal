@@ -87,7 +87,6 @@ public final class MultipleBracketCapturer: NSObject, Capturer, AVCapturePhotoCa
     private let exposures: [AVCaptureAutoExposureBracketedStillImageSettings] = [
         AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias: -2.0),
         AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias: -1.0),
-//        AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias:  0.0),
         AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias:  0.0),
         AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias:  1.0),
         AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias:  2.0),
