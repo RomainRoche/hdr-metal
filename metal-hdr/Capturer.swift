@@ -87,7 +87,7 @@ public final class MultipleBracketCapturer: NSObject, Capturer, AVCapturePhotoCa
     private let exposures: [AVCaptureAutoExposureBracketedStillImageSettings] = [
         AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias: -2.0),
         AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias: -1.0),
-        AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias:  0.0),
+//        AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias:  0.0),
         AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias:  0.0),
         AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias:  1.0),
         AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias:  2.0),
@@ -104,20 +104,19 @@ public final class MultipleBracketCapturer: NSObject, Capturer, AVCapturePhotoCa
         captureTime = Date().timeIntervalSinceReferenceDate
         stillImageOutput.maxPhotoQualityPrioritization = .quality
         
-        let defaultExp = AVCaptureAutoExposureBracketedStillImageSettings.autoExposureSettings(exposureTargetBias: 0.0)
-        let exposuresChunks = exposures.chunked(into: 3, paddingWith: defaultExp)
-        
+        // stride 3 by 3
         measureTime("Multiple bracket capture") {
-            for exposures in exposuresChunks {
+            for i in stride(from: 0, to: exposures.count, by: 3) {
+                let chunk = Array(exposures[i..<min(i+3, exposures.count)])
                 let photoSettings = AVCapturePhotoBracketSettings(
                     rawPixelFormatType: 0,
                     processedFormat: [AVVideoCodecKey : AVVideoCodecType.jpeg],
-                    bracketedSettings: exposures
+                    bracketedSettings: chunk
                 )
                 
                 photoSettings.isLensStabilizationEnabled = true
                 photoSettings.flashMode = .off
-                
+                print("Multiple bracket with \(chunk.count) exposures")
                 capture(with: photoSettings)
             }
         }
@@ -137,9 +136,7 @@ public final class MultipleBracketCapturer: NSObject, Capturer, AVCapturePhotoCa
         photos.append(image)
         
         if photos.count == exposures.count {
-            var toSend = photos
-            toSend.remove(at: 2)
-            onCapture.send((toSend, UIDevice.current.imageOrientation))
+            onCapture.send((photos, UIDevice.current.imageOrientation))
             print("Multiple bracket capture: took \(String(format: "%.6f", Date().timeIntervalSinceReferenceDate - captureTime))s")
             photos = []
         }
