@@ -22,6 +22,9 @@ struct ContentView: View {
     
     @State
     private var images: [UIImage] = []
+    
+    @State
+    private var bracketsShareUrls: [URL] = []
 
     @State
     private var ciImages: [CIImage] = []
@@ -75,13 +78,44 @@ struct ContentView: View {
             }
         } label: {
             Text("HDR")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .foregroundStyle(Color.white)
                 .padding()
-                .frame(width: 140, height: 140)
                 .background(Color.accentColor)
                 .clipShape(RoundedRectangle(cornerRadius: 4))
-
         }
+    }
+    
+    @ViewBuilder
+    func shareButton(for shareURLs: [URL]) -> some View {
+        ShareLink(items: shareURLs) {
+            Image(systemName: "square.and.arrow.up")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .foregroundStyle(Color.white)
+                .padding()
+                .background(Color.blue)
+                .clipShape(RoundedRectangle(cornerRadius: 4))
+        }
+    }
+    
+    @ViewBuilder
+    var resultsCTAs: some View {
+        VStack(spacing: 8) {
+            toHDR
+                .frame(width: 100)
+                .frame(maxHeight: .infinity)
+            
+            Group {
+                if !bracketsShareUrls.isEmpty {
+                    shareButton(for: bracketsShareUrls)
+                } else {
+                    Color.clear.frame(maxHeight: .infinity)
+                }
+            }
+            .frame(width: 100)
+            .frame(maxHeight: .infinity)
+        }
+        .frame(height: 140)
     }
     
     @ViewBuilder
@@ -91,7 +125,7 @@ struct ContentView: View {
         } else {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(alignment: .center, spacing: 8) {
-                    toHDR
+                    resultsCTAs
                     
                     ForEach(Array(images.enumerated()), id: \.offset) { offset, image in
                         Image(uiImage: image)
@@ -142,6 +176,7 @@ struct ContentView: View {
                 .sink {
                     ciImages = $0.images
                     images = $0.images.uiImages(with: $0.orientation)
+                    bracketsShareUrls = images.generateShareURLs() ?? []
                     hdrResultOrientation = $0.orientation
                 }
                 .store(in: &cancels)
@@ -155,6 +190,11 @@ struct ContentView: View {
                     .onLongPressGesture {
                         UIPasteboard.general.image = hdrImage
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    }
+                    .overlay(alignment: .bottomLeading) {
+                        shareButton(for: [hdrImage].generateShareURLs() ?? [])
+                            .frame(width: 44, height: 44)
+                            .padding(.all, 16)
                     }
             } else {
                 EmptyView()

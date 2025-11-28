@@ -51,6 +51,51 @@ extension UIImage {
     
 }
 
+extension Array where Element == UIImage {
+
+    /// Saves images to temporary directory and returns their file URLs for sharing
+    /// - Parameter quality: JPEG compression quality (0.0-1.0), default is 0.9
+    /// - Returns: Array of file URLs, or nil if saving fails
+    func generateShareURLs(quality: CGFloat = 0.9) -> [URL]? {
+        let temporaryDirectory = FileManager.default.temporaryDirectory
+        var urls: [URL] = []
+
+        for (index, image) in self.enumerated() {
+            // Generate unique filename using timestamp and index
+            let timestamp = Int(Date().timeIntervalSince1970)
+            let filename = "image_\(timestamp)_\(index).jpg"
+            let fileURL = temporaryDirectory.appendingPathComponent(filename)
+
+            // Convert UIImage to JPEG data
+            guard let data = image.jpegData(compressionQuality: quality) else {
+                print("Failed to convert image \(index) to JPEG data")
+                return nil
+            }
+
+            // Write to temporary file
+            do {
+                try data.write(to: fileURL)
+                urls.append(fileURL)
+            } catch {
+                print("Failed to write image \(index) to file: \(error)")
+                return nil
+            }
+        }
+
+        return urls
+    }
+
+    /// Cleans up temporary image files at the given URLs
+    /// - Parameter urls: Array of file URLs to delete
+    static func cleanupShareURLs(_ urls: [URL]) {
+        let fileManager = FileManager.default
+        for url in urls {
+            try? fileManager.removeItem(at: url)
+        }
+    }
+
+}
+
 extension UIDevice {
     
     var imageOrientation: UIImage.Orientation {
