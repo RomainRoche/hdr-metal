@@ -88,6 +88,7 @@ class HDRBuilder {
     enum ToneMappingMode {
         case reinhard(exposure: Float)
         case aces
+        case none
     }
     
     func buildHDR(
@@ -275,33 +276,51 @@ class HDRBuilder {
     }
     
     private func applyToneMapping(to texture: MTLTexture, mode: ToneMappingMode) -> MTLTexture? {
-        guard let commandBuffer = commandQueue.makeCommandBuffer(),
-              let encoder = commandBuffer.makeComputeCommandEncoder(),
-              let outputTexture = makeTexture(like: texture) else {
-            return nil
-        }
-        
         switch mode {
+        case .none:
+            // No tone mapping - return merged texture directly
+            return texture
+
         case .reinhard(let exposure):
+            guard let commandBuffer = commandQueue.makeCommandBuffer(),
+                  let encoder = commandBuffer.makeComputeCommandEncoder(),
+                  let outputTexture = makeTexture(like: texture) else {
+                return nil
+            }
+
             encoder.setComputePipelineState(reinhardToneMapPipeline)
             encoder.setTexture(texture, index: 0)
             encoder.setTexture(outputTexture, index: 1)
             var exp = exposure
             encoder.setBytes(&exp, length: MemoryLayout<Float>.stride, index: 0)
-            
+
+            dispatchThreads(encoder: encoder, texture: texture)
+            encoder.endEncoding()
+
+            commandBuffer.commit()
+            commandBuffer.waitUntilCompleted()
+
+            return outputTexture
+
         case .aces:
+            guard let commandBuffer = commandQueue.makeCommandBuffer(),
+                  let encoder = commandBuffer.makeComputeCommandEncoder(),
+                  let outputTexture = makeTexture(like: texture) else {
+                return nil
+            }
+
             encoder.setComputePipelineState(acesToneMapPipeline)
             encoder.setTexture(texture, index: 0)
             encoder.setTexture(outputTexture, index: 1)
+
+            dispatchThreads(encoder: encoder, texture: texture)
+            encoder.endEncoding()
+
+            commandBuffer.commit()
+            commandBuffer.waitUntilCompleted()
+
+            return outputTexture
         }
-        
-        dispatchThreads(encoder: encoder, texture: texture)
-        encoder.endEncoding()
-        
-        commandBuffer.commit()
-        commandBuffer.waitUntilCompleted()
-        
-        return outputTexture
     }
     
     // MARK: - Image Alignment
